@@ -650,7 +650,6 @@ class WrongPassphraseWiringTests(unittest.TestCase):
     passphrase check at all.
     """
 
-    @unittest.expectedFailure
     def test_the_bundle_decrypts_with_the_wrong_passphrase(self) -> None:
         inputs = step_inputs(WRONG_CHECK)
         self.assertEqual(
@@ -660,7 +659,6 @@ class WrongPassphraseWiringTests(unittest.TestCase):
             inputs["sigul-pass"], "${{ steps.setup.outputs.alternate_passphrase }}"
         )
 
-    @unittest.expectedFailure
     def test_a_dry_run_shows_the_alternate_bundle_decrypts(self) -> None:
         # A dry run decrypts the bundle and opens the NSS database, but
         # never sends the passphrase to the client, so it passes with
@@ -676,7 +674,6 @@ class WrongPassphraseWiringTests(unittest.TestCase):
         check = named_step(TESTING_STEPS, "Assert the connection checks")
         self.assertIn("steps.alternate_dry_run.outcome", check)
 
-    @unittest.expectedFailure
     def test_both_bundles_hold_the_same_archive(self) -> None:
         # So the only difference between the passing check and the
         # failing one is the passphrase the server receives.

@@ -50,6 +50,7 @@ from git_tag import SigningRepository, workspace_git_dir, write_tag_ref
 from gpg_bundle import kill_gpg_agent
 from prepare_credentials import prepare
 from private_storage import SHARED_MEMORY, private_directory
+from public_key import check_connection
 from termination import defer_termination
 
 # A dry run does no signing, so it has no business running long; a
@@ -361,7 +362,9 @@ def sign(plan: Plan, values: dict[str, str]) -> None:
         run = ContainerRun(plan, pulled, prepared, creds, name, user, selinux)
         if plan.sign_type == "sign-data":
             sign_data(run)
-        else:
+        elif plan.sign_type == "sign-git-tag":
             sign_git_tag(run, work, values["GH_KEY"])
+        else:
+            check_connection(run, gnupg)
     finally:
         cleanup(work, gnupg, name)

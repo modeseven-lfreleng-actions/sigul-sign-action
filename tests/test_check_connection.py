@@ -119,7 +119,6 @@ def make_public_key(case: unittest.TestCase, subkeys: int) -> tuple[bytes, list[
 
 
 class InputTests(unittest.TestCase):
-    @unittest.expectedFailure
     def test_check_connection_is_a_sign_type(self) -> None:
         root = scratch(self)
         plan = build_plan(check_env(root), PINS_DIR)
@@ -127,7 +126,6 @@ class InputTests(unittest.TestCase):
         self.assertEqual((plan.targets, plan.tag), ((), ""))
         self.assertEqual(plan.messages.notices, [])
 
-    @unittest.expectedFailure
     def test_unknown_sign_type_lists_all_three(self) -> None:
         root = scratch(self)
         with self.assertRaises(InputError) as caught:
@@ -149,7 +147,6 @@ class InputTests(unittest.TestCase):
                         "Input 'sign-object' is required", str(caught.exception)
                     )
 
-    @unittest.expectedFailure
     def test_sign_object_is_refused_for_check_connection(self) -> None:
         root = scratch(self)
         _ = (root / "a.txt").write_text("a")
@@ -160,13 +157,11 @@ class InputTests(unittest.TestCase):
                 self.assertIn("sign-object", str(caught.exception))
                 self.assertIn("check-connection", str(caught.exception))
 
-    @unittest.expectedFailure
     def test_blank_sign_object_is_empty_for_check_connection(self) -> None:
         root = scratch(self)
         plan = build_plan(check_env(root, SIGN_OBJECT=" \n"), PINS_DIR)
         self.assertEqual(plan.targets, ())
 
-    @unittest.expectedFailure
     def test_dry_run_is_refused_for_check_connection(self) -> None:
         root = scratch(self)
         with self.assertRaises(InputError) as caught:
@@ -187,7 +182,6 @@ class InputTests(unittest.TestCase):
         self.assertEqual(status, 1)
         self.assertEqual(output.read_text(), "validation_status=rejected\n")
 
-    @unittest.expectedFailure
     def test_validation_passes_and_reports_the_check(self) -> None:
         root = scratch(self)
         output = root / "validation-output"
@@ -203,7 +197,6 @@ class InputTests(unittest.TestCase):
         self.assertEqual(output.read_text(), "validation_status=passed\n")
         self.assertIn("signs nothing", log.getvalue())
 
-    @unittest.expectedFailure
     def test_unused_inputs_are_noted_not_refused(self) -> None:
         root = scratch(self)
         cases = {
@@ -218,7 +211,6 @@ class InputTests(unittest.TestCase):
                     plan.messages.notices, [f"{name} is not used for check-connection"]
                 )
 
-    @unittest.expectedFailure
     def test_default_exclude_globs_are_not_noted(self) -> None:
         root = scratch(self)
         # Spacing and blank lines do not make the default a choice.
@@ -228,7 +220,6 @@ class InputTests(unittest.TestCase):
                 plan = build_plan(check_env(root, EXCLUDE_GLOBS=raw), PINS_DIR)
                 self.assertEqual(plan.messages.notices, [])
 
-    @unittest.expectedFailure
     def test_default_exclude_globs_match_action_yaml(self) -> None:
         action_inputs = importlib.import_module("action_inputs")
         source = (REPOSITORY / "action.yaml").read_text()
@@ -244,14 +235,12 @@ class InputTests(unittest.TestCase):
 
 
 class ActionMetadataTests(unittest.TestCase):
-    @unittest.expectedFailure
     def test_sign_object_is_optional_in_action_yaml(self) -> None:
         source = (REPOSITORY / "action.yaml").read_text()
         block = re.search(r"(?m)^  sign-object:\n((?:    .*\n)+)", source)
         assert block is not None
         self.assertIn("    required: false\n", block[1])
 
-    @unittest.expectedFailure
     def test_public_key_fingerprints_is_an_output_of_the_signing_step(self) -> None:
         source = (REPOSITORY / "action.yaml").read_text()
         found = re.search(
@@ -274,7 +263,6 @@ fpr:::::::::A9FFEBFBDF7C2C8BA867A1E088EAA97D419A13EE:
 
 
 class FingerprintTests(unittest.TestCase):
-    @unittest.expectedFailure
     def test_primary_then_every_subkey_in_upper_case(self) -> None:
         fingerprints = fingerprints_from_colons(COLONS_TWO_SUBKEYS)
         self.assertEqual(
@@ -286,7 +274,6 @@ class FingerprintTests(unittest.TestCase):
             ],
         )
 
-    @unittest.expectedFailure
     def test_listings_that_are_not_one_public_key_are_refused(self) -> None:
         primary = COLONS_TWO_SUBKEYS.split("uid:")[0]
         cases = {
@@ -310,7 +297,6 @@ class FingerprintTests(unittest.TestCase):
             with self.subTest(case=name), self.assertRaises(ActionError):
                 _ = fingerprints_from_colons(listing)
 
-    @unittest.expectedFailure
     def test_gpg_lists_a_key_with_several_subkeys(self) -> None:
         armoured, expected = make_public_key(self, subkeys=2)
         self.assertEqual(len(expected), 3)
@@ -322,7 +308,6 @@ class FingerprintTests(unittest.TestCase):
         found = public_key_fingerprints(reply, home)
         self.assertEqual(found, expected)
 
-    @unittest.expectedFailure
     def test_replies_that_are_not_one_armoured_public_key_are_refused(self) -> None:
         armoured, _ = make_public_key(self, subkeys=1)
         text = armoured.decode("ascii")
@@ -349,7 +334,6 @@ class FingerprintTests(unittest.TestCase):
                 with self.assertRaises(ActionError):
                     _ = public_key_fingerprints(reply, home)
 
-    @unittest.expectedFailure
     def test_a_link_is_not_followed(self) -> None:
         armoured, _ = make_public_key(self, subkeys=0)
         root = scratch(self)
@@ -362,7 +346,6 @@ class FingerprintTests(unittest.TestCase):
         with self.assertRaises(ActionError):
             _ = public_key_fingerprints(reply, home)
 
-    @unittest.expectedFailure
     def test_a_missing_reply_is_refused(self) -> None:
         root = scratch(self)
         home = root / "gnupg"
@@ -370,7 +353,6 @@ class FingerprintTests(unittest.TestCase):
         with self.assertRaises(ActionError):
             _ = public_key_fingerprints(root / "absent", home)
 
-    @unittest.expectedFailure
     def test_a_fifo_is_refused_without_waiting_for_a_writer(self) -> None:
         # Opening a FIFO to read blocks until a writer appears, outside
         # every timeout the action sets, so a container leaving one in
@@ -464,7 +446,6 @@ class ConnectionFixture:
 class ConnectionRunTests(unittest.TestCase):
     """public_key.check_connection, stopped at the Docker launch."""
 
-    @unittest.expectedFailure
     def test_success_reports_the_fingerprints_and_signs_nothing(self) -> None:
         armoured, fingerprints = make_public_key(self, subkeys=2)
         fixture = ConnectionFixture(self)
@@ -491,7 +472,6 @@ class ConnectionRunTests(unittest.TestCase):
             f"type=bind,source={workspace},target={workspace},readonly", mounts
         )
 
-    @unittest.expectedFailure
     def test_container_failure_fails_the_step(self) -> None:
         armoured, _ = make_public_key(self, subkeys=0)
         fixture = ConnectionFixture(self)
@@ -499,7 +479,6 @@ class ConnectionRunTests(unittest.TestCase):
             _ = fixture.check(armoured, status=1)
         self.assertFalse(fixture.output.exists())
 
-    @unittest.expectedFailure
     def test_a_reply_that_is_not_a_public_key_fails_the_step(self) -> None:
         for reply in (None, b"", b"not a key\n"):
             with self.subTest(reply=reply):
@@ -510,7 +489,6 @@ class ConnectionRunTests(unittest.TestCase):
 
 
 class DispatchTests(unittest.TestCase):
-    @unittest.expectedFailure
     def test_sign_runs_the_connection_check_and_nothing_else(self) -> None:
         fixture = SigningFixture(self)
         fixture.plan = build_plan(check_env(fixture.base, CONTAINER="modern"), PINS_DIR)

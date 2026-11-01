@@ -260,13 +260,11 @@ class CappedOutputTests(unittest.TestCase):
             )
         return status, output.read_bytes()
 
-    @unittest.expectedFailure
     def test_a_reply_within_the_cap_passes_through(self) -> None:
         status, written = self.call(PRINTER, "a" * 1024)
         self.assertEqual(status, 0)
         self.assertEqual(written, b"a" * 1024)
 
-    @unittest.expectedFailure
     def test_a_reply_over_the_cap_is_stopped_while_it_streams(self) -> None:
         # The client never ends of its own accord, so only the cap,
         # enforced while the reply arrives, can stop it in time.
@@ -276,7 +274,6 @@ class CappedOutputTests(unittest.TestCase):
         self.assertLessEqual(len(written), 4096)
         self.assertLess(time.time() - started, 15)
 
-    @unittest.expectedFailure
     def test_one_byte_over_the_cap_is_refused(self) -> None:
         status, _written = self.call(PRINTER, "a" * 1025)
         self.assertEqual(status, self.too_large())
